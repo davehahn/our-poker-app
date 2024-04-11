@@ -6,24 +6,40 @@ generator client {
 }
 
 datasource db {
-    provider = "postgresql"
-    // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
-    // Further reading:
-    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
-    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model Player {
+  id          String        @id @default(cuid())
+  createdAt   DateTime      @default(now())
+  firstName   String
+  lastName    String
+  nickName    String
+  email       String        @unique
+}
 
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
+model League {
+  id          String        @id @default(cuid())
+  createdAt   DateTime      @default(now())
+  name        String
+  startDate   DateTime      @db.Date
+  endDate     DateTime      @db.Date
+}
 
-    @@index([name])
+model Series {
+  id          String        @id @default(cuid())
+  createdAt   DateTime      @default(now())
+  name        String
+  tournaments Tournament[]
+}
+
+model Tournament {
+  id          String        @id @default(cuid())
+  createdAt   DateTime      @default(now())
+  series      Series        @relation(fields: [seriesId], references: [id])
+  seriesId    String
 }
 
 // Necessary for Next auth
@@ -61,7 +77,6 @@ model User {
     image         String?
     accounts      Account[]
     sessions      Session[]
-    posts         Post[]
 }
 
 model VerificationToken {
